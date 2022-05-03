@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# VS Code
+.vscode/
+
+# log folder ignore
+logs/
+
+# Set apart a specific folder to ignore
+ignore/
