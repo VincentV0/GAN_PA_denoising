@@ -2,6 +2,7 @@
 ### This file contains the Pix2Pix model, optimized for the purpose of image denoising 
 ### Largely based on https://www.tensorflow.org/tutorials/generative/pix2pix
 ### and https://opg.optica.org/boe/fulltext.cfm?uri=boe-12-10-6184&id=458664
+### Last updated: 2022/05/04 9:15 AM
 ###
 
 # Import required libraries
@@ -35,7 +36,7 @@ def downsample(filters, size, apply_batchnorm=True):
     # Finally, a Leaky ReLU layer
     result.add(tf.keras.layers.LeakyReLU())
     return result
-    
+
 
 def upsample(filters, size, apply_dropout=False):
     """
@@ -81,12 +82,12 @@ def Generator(input_size=(256,256), n_filters=64, kernel_size=4):
         downsample(n_filters*8, kernel_size),  
         downsample(n_filters*8, kernel_size),  
         downsample(n_filters*8, kernel_size),  
-        downsample(n_filters*8, kernel_size),  
+        #downsample(n_filters*8, kernel_size),  
     ]
 
     # Define the upwards (encoder) stream
     up_stack = [
-        upsample(n_filters*8, kernel_size, apply_dropout=True), 
+        #upsample(n_filters*8, kernel_size, apply_dropout=True), 
         upsample(n_filters*8, kernel_size, apply_dropout=True), 
         upsample(n_filters*8, kernel_size, apply_dropout=True), 
         upsample(n_filters*8, kernel_size),
@@ -141,12 +142,8 @@ def generator_loss(disc_generated_output, gen_output, target, lambda_value=100,\
     A value of 100 for LAMBDA was found by the authors of the Pix2Pix paper.
     """
     gan_loss = loss_object(tf.ones_like(disc_generated_output), disc_generated_output)
-
-    # Mean absolute error
-    l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
-
+    l1_loss = tf.reduce_mean(tf.abs(target - gen_output)) # Mean absolute error
     total_gen_loss = gan_loss + (lambda_value * l1_loss)
-
     return total_gen_loss, gan_loss, l1_loss
 
 
@@ -214,31 +211,7 @@ def discriminator_loss(disc_real_output, disc_generated_output,\
     Total discriminator loss = real loss + generated loss
     """
 
-    # Real loss
     real_loss = loss_object(tf.ones_like(disc_real_output), disc_real_output)
-    # Generated loss
     generated_loss = loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
-    # Total loss
     total_disc_loss = real_loss + generated_loss
     return total_disc_loss
-
-
-# Function to predict / generate the images. Can also be used to plot these images.
-def generate_images(model, test_input, target=None, plot=False):
-    # Let the model predict
-    prediction = model(test_input, training=True)
-
-    if plot:
-        plt.figure(figsize=(15, 15))
-        # Show input image, ground truth and predicted image
-        display_list = [test_input[0], target[0], prediction[0]]
-        title = ['Input Image', 'Ground Truth', 'Predicted Image']
-
-        for i in range(3):
-            plt.subplot(1, 3, i+1)
-            plt.title(title[i])
-            # Getting the pixel values in the [0, 1] range to plot.
-            plt.imshow(display_list[i] * 0.5 + 0.5)
-            plt.axis('off')
-        plt.show()
-    return prediction
