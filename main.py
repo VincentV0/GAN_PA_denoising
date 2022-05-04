@@ -21,12 +21,16 @@ from eval import mean_squared_error, peak_SNR, struct_simil_index
 PATCH_SIZE       = (128,128)
 MODEL_INPUT_SIZE = (128,128,1)
 IMAGE_SIZE       = (256,256)
+SAVE_PATH_MODELS = 'saved_models'
 SAVE_PATH_CSV    = os.path.join('logs','csv', datetime.now().strftime("%Y.%m.%d-%H.%M.%S") + '.csv')
 
 d = Dataset('pseudo8_realnoise.mat','x', PATCH_SIZE, combine_n_frames=1, normalize=True) 
 
-# Throw it through the model
-Gen, Disc, losses = model_train(d.patches, d.patches_ref, d.patches, d.patches_ref, epochs=5, img_shape=MODEL_INPUT_SIZE) # <<<<<<<< change training data / validata
+# Train the model
+Gen, Disc, losses = model_train(d.patches, d.patches_ref, d.patches, d.patches_ref, epochs=150, img_shape=MODEL_INPUT_SIZE, batch_size=10) # <<<<<<<< change training data / validata
+
+# Save the fully trained models
+Gen.save(os.path.join(SAVE_PATH_MODELS, f'Generator_{datetime.now().strftime("%Y%m%d-%H_%M_%S")}'))
 
 # Write losses to CSV-file
 pd.DataFrame(losses).to_csv(SAVE_PATH_CSV)
@@ -39,11 +43,10 @@ plt.figure(figsize=(15, 15))
 # Show input image, ground truth and predicted image
 display_list = [d.data[0,0], d.data_ref[0,0], y_pred[0]]
 title = ['Input Image', 'Reference Image', 'Predicted Image']
-for i in range(3):
-    plt.subplot(1, 3, i+1)
+for i in range(len(display_list)):
+    plt.subplot(1, len(display_list), i+1)
     plt.title(title[i])
-    # Getting the pixel values in the [0, 1] range to plot.
-    plt.imshow(display_list[i], cmap='gray', vmin=-1, vmax=1)
+    plt.imshow(display_list[i], cmap='gray', vmin=0, vmax=1)
     plt.axis('off')
     plt.colorbar()
 plt.show()
