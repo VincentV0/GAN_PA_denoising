@@ -1,21 +1,21 @@
 clear all; close all;                                       %#ok<CLALL> 
 %% Set parameters:
 PATCH_SIZE   = [128 128];   % patch size
-IMAGE_SIZE   = [256 256];   % size of the original image
+IMAGE_SIZE   = [896 128];   % size of the original image
 COMBINE_IMGS = 1;           % must be an integer
 
 % Set model path
 MODEL_PATH = '../saved_models/';
 
 % Set model name (name of folder the model is stored into)
-MODEL_FILENAME = [ MODEL_PATH 'Generator_20220504-12_31_12'];
+MODEL_FILENAME = [ MODEL_PATH 'Generator_20220505-09_21_54'];
 
-%% Set up CuDNN support and import model
+%% Set up CuDNN support and import model (~ 1 min)
 disp('Initializing GPU...')
 envCfg = coder.gpuEnvConfig('host');
 envCfg.DeepLibTarget = 'cudnn';
 envCfg.DeepCodegen = 1;
-envCfg.Quiet = 1;
+envCfg.Quiet = true;
 coder.checkGpuInstall(envCfg);
 
 % Import trained model
@@ -26,15 +26,15 @@ model = importTensorFlowNetwork(MODEL_FILENAME, ...
 
 % Acquire single image (Verasonix implementation here! For now, use the
 % pseudo-data)
-load('../pseudo8_realnoise.mat')
-i1 = randi(3);
-i2 = randi(20);
-img = reshape(x(i1, i2, :, :), 1, 256,256);
+load('../data/RFdata_val.mat')
+while true
+i2 = randi(9);
+img = reshape(RF_val_single(:, i2, :), 1, IMAGE_SIZE(1), IMAGE_SIZE(2));
 
 %% Image processing
 % at this point, the data should have a shape of (frames, imagesize_x, imagesize_y)
 
-%% Pre-process data as model input
+%% Pre-process data for model input
 tic % timer starting here
 
 % Combine frames if necessary
@@ -59,17 +59,18 @@ output = reshape(output, size(patches));
 img_output = patch_reconstruct(output, IMAGE_SIZE);
 toc % timer stopping here
 
-% Show results
+%% Show results
 subplot(1,3,1);
-x_plot = reshape(x(1,:,:,:), 20, 256,256);
-x_plot = reshape(mean(x_plot, 1), 256, 256);
+x_plot = squeeze(RF_val_avg(:,i2,:));
 imshow(x_plot)
 title('Reference')
 
 subplot(1,3,2);
-imshow(reshape(img, 256,256))
+imshow(squeeze(img))
 title('Model input')
 
 subplot(1,3,3); 
-imshow(reshape(img_output, 256,256))
+imshow(squeeze(img_output))
 title('Predicted')
+w = waitforbuttonpress;
+end

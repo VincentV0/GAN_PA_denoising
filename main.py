@@ -15,19 +15,20 @@ import pandas as pd
 # Import from other files
 from training import model_train
 from data_utils import Dataset
-from eval import mean_squared_error, peak_SNR, struct_simil_index
+from eval import mean_squared_error, peak_SNR, show_img, struct_simil_index
 
 # Set constants
 PATCH_SIZE       = (128,128)
 MODEL_INPUT_SIZE = (128,128,1)
-IMAGE_SIZE       = (256,256)
+IMAGE_SIZE       = (128,896)
 SAVE_PATH_MODELS = 'saved_models'
 SAVE_PATH_CSV    = os.path.join('logs','csv', datetime.now().strftime("%Y.%m.%d-%H.%M.%S") + '.csv')
 
-d = Dataset('pseudo8_realnoise.mat','x', PATCH_SIZE, combine_n_frames=1, normalize=True) 
+train = Dataset('data/RFdata_train.mat','RF_train_single', 'RF_train_avg', PATCH_SIZE, combine_n_frames=1, normalize=True, svd_denoise=['ref']) 
+val   = Dataset('data/RFdata_val.mat'  ,'RF_val_single'  , 'RF_val_avg'  , PATCH_SIZE, combine_n_frames=1, normalize=True, svd_denoise=['ref']) 
 
 # Train the model
-Gen, Disc, losses = model_train(d.patches, d.patches_ref, d.patches, d.patches_ref, epochs=150, img_shape=MODEL_INPUT_SIZE, batch_size=10) # <<<<<<<< change training data / validata
+Gen, Disc, losses = model_train(train.patches, train.patches_ref, val.patches, val.patches_ref, epochs=500, img_shape=MODEL_INPUT_SIZE, batch_size=5)
 
 # Save the fully trained models
 Gen.save(os.path.join(SAVE_PATH_MODELS, f'Generator_{datetime.now().strftime("%Y%m%d-%H_%M_%S")}'))
@@ -35,25 +36,17 @@ Gen.save(os.path.join(SAVE_PATH_MODELS, f'Generator_{datetime.now().strftime("%Y
 # Write losses to CSV-file
 pd.DataFrame(losses).to_csv(SAVE_PATH_CSV)
 
-# Predict patches andd restore patches in original image
-d.model_results = np.array(Gen(d.patches)) # predict model results; use generator to predict result of patches <<<<<<<<<<<<< has to be validata 
-y_pred = d.revert_patching()
+# Predict patches and restore patches in original image
+val.model_results = np.array(Gen(val.patches)) # predict model results; use generator to predict result of patches
+y_pred = val.revert_patching()
 
-plt.figure(figsize=(15, 15))
 # Show input image, ground truth and predicted image
-display_list = [d.data[0,0], d.data_ref[0,0], y_pred[0]]
-title = ['Input Image', 'Reference Image', 'Predicted Image']
-for i in range(len(display_list)):
-    plt.subplot(1, len(display_list), i+1)
-    plt.title(title[i])
-    plt.imshow(display_list[i], cmap='gray', vmin=0, vmax=1)
-    plt.axis('off')
-    plt.colorbar()
-plt.show()
+show_img(val.data[0], val.data_ref[0], y_pred[0])
+
 
 
 ### Metrics
-y_true   = d.data_ref.reshape(-1, IMAGE_SIZE[0], IMAGE_SIZE[1]) # <<<<<<<<<<<<<<<<< has to be validata
+y_true   = val.data_ref.reshape(-1, IMAGE_SIZE[0], IMAGE_SIZE[1])
 # Calculate Mean Squared Error:
 print(f"MSE (avg over all frames)  : {np.mean(mean_squared_error(y_true, y_pred))}")
 # Calculate SSIM

@@ -136,3 +136,10 @@ logs/
 
 # Set apart a specific folder to ignore
 ignore/
+
+# Ignore training checkpoints and saved models folder 
+saved_models/
+training_checkpoints
+
+# Ignore data folder
+data/

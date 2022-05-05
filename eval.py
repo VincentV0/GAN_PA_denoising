@@ -6,6 +6,7 @@
 
 # Import libraries
 import numpy as np
+from matplotlib import pyplot as plt
 from skimage.metrics import structural_similarity as ssim, peak_signal_noise_ratio as pSNR
 
 
@@ -36,3 +37,17 @@ def peak_SNR(y_true, y_pred):
     """
     img_pSNR = [pSNR(y_true[i], y_pred[i]) for i in range(y_true.shape[0])] 
     return np.array(img_pSNR)
+
+
+def show_img(inp, ref, pred):
+    plt.figure(figsize=(15, 15))
+    # Show input image, ground truth and predicted image
+    display_list = [inp, ref, pred]
+    title = ['Input Image', 'Reference Image', 'Predicted Image']
+    for i in range(len(display_list)):
+        plt.subplot(1, len(display_list), i+1)
+        plt.title(title[i])
+        plt.imshow(np.swapaxes(display_list[i], 0,1), cmap='gray', vmin=0, vmax=1)
+        plt.axis('off')
+        plt.colorbar()
+    plt.show()
