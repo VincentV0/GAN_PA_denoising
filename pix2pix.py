@@ -81,14 +81,14 @@ def Generator(input_size=(256,256), n_filters=64, kernel_size=4):
         downsample(n_filters*8, kernel_size),
         downsample(n_filters*8, kernel_size),  
         downsample(n_filters*8, kernel_size),  
-        downsample(n_filters*8, kernel_size),  
+        #downsample(n_filters*8, kernel_size),  
         #downsample(n_filters*8, kernel_size),  
     ]
 
     # Define the upwards (encoder) stream
     up_stack = [
         #upsample(n_filters*8, kernel_size, apply_dropout=True), 
-        upsample(n_filters*8, kernel_size, apply_dropout=True), 
+        #upsample(n_filters*8, kernel_size, apply_dropout=True), 
         upsample(n_filters*8, kernel_size, apply_dropout=True), 
         upsample(n_filters*8, kernel_size),
         upsample(n_filters*4, kernel_size),
@@ -161,7 +161,7 @@ def Discriminator(input_shape=(256,256,1)):
      v
     Zero padding
      V 
-    Conv2D (516, 4, stride=1) --> BatchNorm --> LeakyReLU
+    Conv2D (512, 4, stride=1) --> BatchNorm --> LeakyReLU
      V
     Zero padding --> Conv2D (1, 4x4, stride=1)
     """

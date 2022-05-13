@@ -13,7 +13,6 @@ from datetime import datetime
 from time import time
 from pix2pix import Generator, Discriminator, generator_loss, discriminator_loss
 from matplotlib import pyplot as plt
-from IPython import display
 from tqdm import tqdm
 
 from keras import backend as K_backend
